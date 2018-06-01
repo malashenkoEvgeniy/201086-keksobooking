@@ -1,7 +1,7 @@
 # Личный проект «Кексобукинг» [![Build status][travis-image]][travis-url]
 
 * Студент: [Евгений Малашенко](https://up.htmlacademy.ru/javascript/14/user/201086).
-* Наставник: `Неизвестно`.
+* Наставник: `нет`.
 
 ---
 
