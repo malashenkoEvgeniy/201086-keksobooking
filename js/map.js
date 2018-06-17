@@ -179,7 +179,6 @@ var getClassCheck = function () {
   for (var j = 0; j < mapCardItem.length; j++) {
     if (!mapCardItem[j].classList.contains('hidden')) {
       mapCardItem[j].classList.add('hidden');
-      console.log(mapCardItem[j]);
     }
   }
 };
@@ -192,11 +191,6 @@ var getActiveCondition = function () {
   for (var q = 0; q < fieldsetForm.length; q++) {
     fieldsetForm[q].disabled = false;
   }
-};
-
-// Добавляет класс hidden обьявлению
-var getAddHidden = function (elem) {
-  elem.classList.add('hidden');
 };
 
 // Добавляет обработчик события mouseup на .map__pin--main.
