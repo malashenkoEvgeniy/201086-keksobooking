@@ -1,4 +1,6 @@
 'use strict';
+var WIDTH_PIN = 40;
+var HEIGHT_PIN = 44;
 var START_URL_AVATAR = 'img/avatars/user0';
 var END_URL_AVATAR = '.png';
 var TYPE_CHECK = ['12:00', '13:00', '14:00'];
@@ -37,11 +39,22 @@ var OFFER_TITLE = [
     'title': 'Неуютное бунгало по колено в воде',
     'type': 'bungalo'
   }];
+// Блок переменных
+var mapPinMain = document.querySelector('.map__pin--main');
+var adForm = document.querySelector('.ad-form');
+var fieldsetForm = adForm.querySelectorAll('fieldset');
+var addressPin = document.querySelector('#address');
+var map = document.querySelector('.map');
+var mapPins = document.querySelector('.map__pins');
+var pinTemplate = document.querySelector('template').content;
+var mapPin = pinTemplate.querySelector('.map__pin');
+var mapCard = pinTemplate.querySelector('.map__card');
+
 // Функция возвращает случайное число от до.
 var getRandomNumber = function (min, max) {
   return Math.floor(Math.random() * (max - min) + min);
 };
-
+// Функция возвращает сгенерирываный массив обьектов
 var getArray = function () {
   var arr = [];
   var locationX;
@@ -77,25 +90,6 @@ var getArray = function () {
   return arr;
 };
 
-var map = document.querySelector('.map');
-map.classList.remove('map--faded');
-var mapPins = document.querySelector('.map__pins');
-var pinTemplate = document.querySelector('template').content;
-var mapPin = pinTemplate.querySelector('.map__pin');
-// Создает метки на карте
-var getRenderPin = function (pin) {
-  var pinElement = mapPin.cloneNode(true);
-  pinElement.style.left = pin.location.x + 'px';
-  pinElement.style.top = pin.location.y + 'px';
-  pinElement.querySelector('img').src = pin.author.avatar;
-  return pinElement;
-};
-
-var fragment = document.createDocumentFragment();
-for (var i = 0; i < getArray().length; i++) {
-  fragment.appendChild(getRenderPin(getArray()[i]));
-}
-mapPins.appendChild(fragment);
 // Функция установки праильного кол-ва комнат и гостей согласно правилам рус. языка
 var getCorrectEndings = function (rooms, guests) {
   if (rooms > 1) {
@@ -111,8 +105,24 @@ var getCorrectEndings = function (rooms, guests) {
   return roomTitle + ' для ' + guestTitle;
 };
 
+// Создает метки на карте
+var getRenderPinIcon = function () {
+  var getRenderPin = function (pin) {
+    var pinElement = mapPin.cloneNode(true);
+    pinElement.style.left = pin.location.x + 'px';
+    pinElement.style.top = pin.location.y + 'px';
+    pinElement.querySelector('img').src = pin.author.avatar;
+    return pinElement;
+  };
+
+  var fragment = document.createDocumentFragment();
+  for (var i = 0; i < getArray().length; i++) {
+    fragment.appendChild(getRenderPin(getArray()[i]));
+  }
+  mapPins.appendChild(fragment);
+};
+
 // Функция Создает обьявление
-var mapCard = pinTemplate.querySelector('.map__card');
 var getRenderPinCard = function (pin) {
   var pinElement = mapCard.cloneNode(true);
   pinElement.querySelector('.popup__title').textContent = pin.offer.title;
@@ -153,9 +163,122 @@ var getRenderPinCard = function (pin) {
   pinElement.querySelector('.popup__avatar').src = pin.author.avatar;
   return pinElement;
 };
-var fragment1 = document.createDocumentFragment();
-for (var j = 0; j < getArray().length; j++) {
-  fragment1.appendChild(getRenderPinCard(getArray()[j]));
-}
-map.insertBefore(fragment1, document.querySelector('.map__filters-container'));
+// Создает описания обьявлений
+var getPinCards = function () {
+  var fragment1 = document.createDocumentFragment();
+  for (var j = 0; j < getArray().length; j++) {
+    fragment1.appendChild(getRenderPinCard(getArray()[j]));
+  }
+  map.insertBefore(fragment1, document.querySelector('.map__filters-container'));
+};
+getPinCards();
+
+var mapCardItem = document.querySelectorAll('.map__card');
+// Функция проверяющая mapCardItem на наличие класса hidden. Если класа hidden нет, функция его добавляет
+var getClassCheck = function () {
+  for (var j = 0; j < mapCardItem.length; j++) {
+    if (!mapCardItem[j].classList.contains('hidden')) {
+      mapCardItem[j].classList.add('hidden');
+      console.log(mapCardItem[j]);
+    }
+  }
+};
+getClassCheck();
+
+// Функция переводит в активное состояние страницу
+var getActiveCondition = function () {
+  map.classList.remove('map--faded');
+  adForm.classList.remove('ad-form--disabled');
+  for (var q = 0; q < fieldsetForm.length; q++) {
+    fieldsetForm[q].disabled = false;
+  }
+};
+
+// Добавляет класс hidden обьявлению
+var getAddHidden = function (elem) {
+  elem.classList.add('hidden');
+};
+
+// Добавляет обработчик события mouseup на .map__pin--main.
+var onPinUp = function (evt) {
+  getActiveCondition();
+  var pinX = evt.clientX + WIDTH_PIN / 2;
+  var pinY = evt.clientY + HEIGHT_PIN * 3 / 2;
+  addressPin.value = pinX + ', ' + pinY;
+  getRenderPinIcon();
+  var pinItem = document.querySelectorAll('.map__pin img');
+
+  var onPinItemClick = function (evtO) {
+    switch (evtO.target.className) {
+      case 'pin1':
+        getClassCheck();
+        mapCardItem[0].classList.remove('hidden');
+        mapCardItem[0].querySelector('.popup__close').onclick = function () {
+          mapCardItem[0].classList.add('hidden');
+        };
+        break;
+      case 'pin2':
+        getClassCheck();
+        mapCardItem[1].classList.remove('hidden');
+        mapCardItem[1].querySelector('.popup__close').onclick = function () {
+          mapCardItem[1].classList.add('hidden');
+        };
+        break;
+      case 'pin3':
+        getClassCheck();
+        mapCardItem[2].classList.remove('hidden');
+        mapCardItem[2].querySelector('.popup__close').onclick = function () {
+          mapCardItem[2].classList.add('hidden');
+        };
+        break;
+      case 'pin4':
+        getClassCheck();
+        mapCardItem[3].classList.remove('hidden');
+        mapCardItem[3].querySelector('.popup__close').onclick = function () {
+          mapCardItem[3].classList.add('hidden');
+        };
+        break;
+      case 'pin5':
+        getClassCheck();
+        mapCardItem[4].classList.remove('hidden');
+        mapCardItem[4].querySelector('.popup__close').onclick = function () {
+          mapCardItem[4].classList.add('hidden');
+        };
+        break;
+      case 'pin6':
+        getClassCheck();
+        mapCardItem[5].classList.remove('hidden');
+        mapCardItem[5].querySelector('.popup__close').onclick = function () {
+          mapCardItem[5].classList.add('hidden');
+        };
+        break;
+      case 'pin7':
+        getClassCheck();
+        mapCardItem[6].classList.remove('hidden');
+        mapCardItem[6].querySelector('.popup__close').onclick = function () {
+          mapCardItem[6].classList.add('hidden');
+        };
+        break;
+      case 'pin8':
+        getClassCheck();
+        mapCardItem[7].classList.remove('hidden');
+        mapCardItem[7].querySelector('.popup__close').onclick = function () {
+          mapCardItem[7].classList.add('hidden');
+        };
+        break;
+    }
+  };
+  for (var k = 1; k < pinItem.length; k++) {
+    pinItem[k].classList.add('pin' + k);
+    pinItem[k].onclick = onPinItemClick;
+  }
+  mapPinMain.removeEventListener('mouseup', onPinUp);
+};
+
+mapPinMain.addEventListener('mouseup', onPinUp);
+
+// Необходимо сделать функцию, которая будет проверять если у обьявления клас 'hidden', и если нет добавлять. Таким
+// образом при свитч кейсе сперва должна быть функция которая делает у всех обьявлений хиден, а потом уже уберать
+// хиден у соответствующего обьявления!
+
 
