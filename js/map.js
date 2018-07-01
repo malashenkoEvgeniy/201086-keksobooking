@@ -94,5 +94,5 @@
     pinElement.querySelector('.popup__avatar').src = pin.author.avatar;
     return pinElement;
   };
-
+  // модуляция
 })();
