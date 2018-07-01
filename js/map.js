@@ -44,7 +44,6 @@
       var map = document.querySelector('.map');
       var fragment1 = document.createDocumentFragment();
       for (var j = 0; j < window.setup.getArray().length; j++) {
-        // getRenderPinCard(window.setup.getArray()[j]).classList.add('hidden');
         fragment1.appendChild(getRenderPinCard(window.setup.getArray()[j]));
       }
       map.insertBefore(fragment1, document.querySelector('.map__filters-container'));
