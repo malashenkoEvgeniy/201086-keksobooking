@@ -1,278 +1,99 @@
 'use strict';
-var WIDTH_PIN = 40;
-var HEIGHT_PIN = 44;
-var START_URL_AVATAR = 'img/avatars/user0';
-var END_URL_AVATAR = '.png';
-var TYPE_CHECK = ['12:00', '13:00', '14:00'];
-var TYPE_FEATURES = ['wifi', 'dishwasher', 'parking', 'washer', 'elevator', 'conditioner'];
-var PHOTOS_URL = ['http://o0.github.io/assets/images/tokyo/hotel1.jpg', 'http://o0.github.io/assets/images/tokyo/hotel2.jpg', 'http://o0.github.io/assets/images/tokyo/hotel3.jpg'];
-var OFFER_TITLE = [
-  {
-    'title': 'Большая уютная квартира',
-    'type': 'flat'
-  },
-  {
-    'title': 'Маленькая неуютная квартира',
-    'type': 'flat'
-  },
-  {
-    'title': 'Огромный прекрасный дворец',
-    'type': 'palace'
-  },
-  {
-    'title': 'Маленький ужасный дворец',
-    'type': 'palace'
-  },
-  {
-    'title': 'Красивый гостевой домик',
-    'type': 'house'
-  },
-  {
-    'title': 'Некрасивый негостеприимный домик',
-    'type': 'house'
-  },
-  {
-    'title': 'Уютное бунгало далеко от моря',
-    'type': 'bungalo'
-  },
-  {
-    'title': 'Неуютное бунгало по колено в воде',
-    'type': 'bungalo'
-  }];
-// Блок переменных
-var mapPinMain = document.querySelector('.map__pin--main');
-var adForm = document.querySelector('.ad-form');
-var fieldsetForm = adForm.querySelectorAll('fieldset');
-var addressPin = document.querySelector('#address');
-var map = document.querySelector('.map');
-var mapPins = document.querySelector('.map__pins');
-var pinTemplate = document.querySelector('template').content;
-var mapPin = pinTemplate.querySelector('.map__pin');
-var mapCard = pinTemplate.querySelector('.map__card');
 
-// Функция возвращает случайное число от до.
-var getRandomNumber = function (min, max) {
-  return Math.floor(Math.random() * (max - min) + min);
-};
-// Функция возвращает сгенерирываный массив обьектов
-var getArray = function () {
-  var arr = [];
-  var locationX;
-  var locationY;
-  var featuresLength;
-  for (var i = 0; i < 8; i++) {
-    locationX = getRandomNumber(300, 900);
-    locationY = getRandomNumber(150, 500);
-    featuresLength = getRandomNumber(0, 5);
-    arr[i] = {
-      'author': {
-        'avatar': START_URL_AVATAR + (i + 1) + END_URL_AVATAR
-      },
-      'location': {
-        'x': locationX,
-        'y': locationY
-      },
-      'offer': {
-        'title': OFFER_TITLE[i].title,
-        'address': locationX + ', ' + locationY,
-        'price': getRandomNumber(1000, 1000000),
-        'type': OFFER_TITLE[i].type,
-        'rooms': getRandomNumber(1, 5),
-        'guests': getRandomNumber(1, 5),
-        'checkin': TYPE_CHECK[getRandomNumber(0, 2)],
-        'checkout': TYPE_CHECK[getRandomNumber(0, 2)],
-        'features': TYPE_FEATURES.slice(0, featuresLength),
-        'description': '',
-        'phptos': PHOTOS_URL
+(function () {
+  var mapPins = document.querySelector('.map__pins');
+
+  // Функция установки праильного кол-ва комнат и гостей согласно правилам рус. языка
+  var getCorrectEndings = function (rooms, guests) {
+    if (rooms > 1) {
+      var roomTitle = rooms + ' комнаты';
+    } else {
+      roomTitle = 'одна комната';
+    }
+    if (guests > 1) {
+      var guestTitle = guests + ' гостей';
+    } else {
+      guestTitle = 'одного гостя';
+    }
+    return roomTitle + ' для ' + guestTitle;
+  };
+
+
+  window.map = {
+    // Создает метки на карте
+    getRenderPinIcon: function () {
+      var getRenderPin = function (pin) {
+        var pinTemplate = document.querySelector('template').content;
+        var mapPin = pinTemplate.querySelector('.map__pin');
+        var pinElement = mapPin.cloneNode(true);
+        pinElement.style.left = pin.location.x + 'px';
+        pinElement.style.top = pin.location.y + 'px';
+        pinElement.querySelector('img').src = pin.author.avatar;
+        return pinElement;
+      };
+
+      var fragment = document.createDocumentFragment();
+      for (var i = 0; i < window.setup.getArray().length; i++) {
+        fragment.appendChild(getRenderPin(window.setup.getArray()[i]));
       }
-    };
-  }
-  return arr;
-};
+      mapPins.appendChild(fragment);
+    },
 
-// Функция установки праильного кол-ва комнат и гостей согласно правилам рус. языка
-var getCorrectEndings = function (rooms, guests) {
-  if (rooms > 1) {
-    var roomTitle = rooms + ' комнаты';
-  } else {
-    roomTitle = 'одна комната';
-  }
-  if (guests > 1) {
-    var guestTitle = guests + ' гостей';
-  } else {
-    guestTitle = 'одного гостя';
-  }
-  return roomTitle + ' для ' + guestTitle;
-};
+    // Создает описания обьявлений
+    getPinCards: function () {
+      var map = document.querySelector('.map');
+      var fragment1 = document.createDocumentFragment();
+      for (var j = 0; j < window.setup.getArray().length; j++) {
+        // getRenderPinCard(window.setup.getArray()[j]).classList.add('hidden');
+        fragment1.appendChild(getRenderPinCard(window.setup.getArray()[j]));
+      }
+      map.insertBefore(fragment1, document.querySelector('.map__filters-container'));
+    }
+  };
 
-// Создает метки на карте
-var getRenderPinIcon = function () {
-  var getRenderPin = function (pin) {
-    var pinElement = mapPin.cloneNode(true);
-    pinElement.style.left = pin.location.x + 'px';
-    pinElement.style.top = pin.location.y + 'px';
-    pinElement.querySelector('img').src = pin.author.avatar;
+  // Функция Создает обьявление
+  var getRenderPinCard = function (pin) {
+    var pinTemplate = document.querySelector('template').content;
+    var mapCard = pinTemplate.querySelector('.map__card');
+    mapCard.classList.add('hidden');
+    var pinElement = mapCard.cloneNode(true);
+    pinElement.querySelector('.popup__title').textContent = pin.offer.title;
+    pinElement.querySelector('.popup__text--address').textContent = pin.offer.address;
+    pinElement.querySelector('.popup__text--price').innerHTML = pin.offer.price + '&#x20bd;/ночь';
+    var typeRus;
+    switch (pin.offer.type) {
+      case 'flat':
+        typeRus = 'квартира';
+        break;
+      case 'palace':
+        typeRus = 'дворец';
+        break;
+      case 'house':
+        typeRus = 'дом';
+        break;
+      case 'bungalo':
+        typeRus = 'бунгало';
+        break;
+    }
+    pinElement.querySelector('.popup__type').textContent = typeRus;
+    pinElement.querySelector('.popup__text--capacity').textContent = getCorrectEndings(pin.offer.rooms, pin.offer.guests);
+    pinElement.querySelector('.popup__text--time').textContent = 'Заезд после ' + pin.offer.checkin + ', выезд до' + pin.offer.checkout;
+    pinElement.querySelector('.popup__features').textContent = '';
+    for (var k = 0; k < pin.offer.features.length; k++) {
+      var popupElement = document.createElement('li');
+      popupElement.className = 'popup__feature popup__feature--' + pin.offer.features[k];
+      pinElement.querySelector('.popup__features').appendChild(popupElement);
+    }
+    pinElement.querySelector('.popup__description').textContent = pin.offer.description;
+    var photoElement = pinElement.querySelector('.popup__photo');
+    pinElement.querySelector('.popup__photos').textContent = '';
+    for (var l = 0; l < pin.offer.phptos.length; l++) {
+      var element = photoElement.cloneNode();
+      element.src = pin.offer.phptos[l];
+      pinElement.querySelector('.popup__photos').appendChild(element);
+    }
+    pinElement.querySelector('.popup__avatar').src = pin.author.avatar;
     return pinElement;
   };
 
-  var fragment = document.createDocumentFragment();
-  for (var i = 0; i < getArray().length; i++) {
-    fragment.appendChild(getRenderPin(getArray()[i]));
-  }
-  mapPins.appendChild(fragment);
-};
-
-// Функция Создает обьявление
-var getRenderPinCard = function (pin) {
-  var pinElement = mapCard.cloneNode(true);
-  pinElement.querySelector('.popup__title').textContent = pin.offer.title;
-  pinElement.querySelector('.popup__text--address').textContent = pin.offer.address;
-  pinElement.querySelector('.popup__text--price').innerHTML = pin.offer.price + '&#x20bd;/ночь';
-  var typeRus;
-  switch (pin.offer.type) {
-    case 'flat':
-      typeRus = 'квартира';
-      break;
-    case 'palace':
-      typeRus = 'дворец';
-      break;
-    case 'house':
-      typeRus = 'дом';
-      break;
-    case 'bungalo':
-      typeRus = 'бунгало';
-      break;
-  }
-  pinElement.querySelector('.popup__type').textContent = typeRus;
-  pinElement.querySelector('.popup__text--capacity').textContent = getCorrectEndings(pin.offer.rooms, pin.offer.guests);
-  pinElement.querySelector('.popup__text--time').textContent = 'Заезд после ' + pin.offer.checkin + ', выезд до' + pin.offer.checkout;
-  pinElement.querySelector('.popup__features').textContent = '';
-  for (var k = 0; k < pin.offer.features.length; k++) {
-    var popupElement = document.createElement('li');
-    popupElement.className = 'popup__feature popup__feature--' + pin.offer.features[k];
-    pinElement.querySelector('.popup__features').appendChild(popupElement);
-  }
-  pinElement.querySelector('.popup__description').textContent = pin.offer.description;
-  var photoElement = pinElement.querySelector('.popup__photo');
-  pinElement.querySelector('.popup__photos').textContent = '';
-  for (var l = 0; l < pin.offer.phptos.length; l++) {
-    var element = photoElement.cloneNode();
-    element.src = pin.offer.phptos[l];
-    pinElement.querySelector('.popup__photos').appendChild(element);
-  }
-  pinElement.querySelector('.popup__avatar').src = pin.author.avatar;
-  return pinElement;
-};
-// Создает описания обьявлений
-var getPinCards = function () {
-  var fragment1 = document.createDocumentFragment();
-  for (var j = 0; j < getArray().length; j++) {
-    fragment1.appendChild(getRenderPinCard(getArray()[j]));
-  }
-  map.insertBefore(fragment1, document.querySelector('.map__filters-container'));
-};
-getPinCards();
-
-var mapCardItem = document.querySelectorAll('.map__card');
-// Функция проверяющая mapCardItem на наличие класса hidden. Если класа hidden нет, функция его добавляет
-var getClassCheck = function () {
-  for (var j = 0; j < mapCardItem.length; j++) {
-    if (!mapCardItem[j].classList.contains('hidden')) {
-      mapCardItem[j].classList.add('hidden');
-    }
-  }
-};
-getClassCheck();
-
-// Функция переводит в активное состояние страницу
-var getActiveCondition = function () {
-  map.classList.remove('map--faded');
-  adForm.classList.remove('ad-form--disabled');
-  for (var q = 0; q < fieldsetForm.length; q++) {
-    fieldsetForm[q].disabled = false;
-  }
-};
-
-// Добавляет обработчик события mouseup на .map__pin--main.
-var onPinUp = function (evt) {
-  getActiveCondition();
-  var pinX = evt.clientX + WIDTH_PIN / 2;
-  var pinY = evt.clientY + HEIGHT_PIN * 3 / 2;
-  addressPin.value = pinX + ', ' + pinY;
-  getRenderPinIcon();
-  var pinItem = document.querySelectorAll('.map__pin img');
-
-  var onPinItemClick = function (evtO) {
-    switch (evtO.target.className) {
-      case 'pin1':
-        getClassCheck();
-        mapCardItem[0].classList.remove('hidden');
-        mapCardItem[0].querySelector('.popup__close').onclick = function () {
-          mapCardItem[0].classList.add('hidden');
-        };
-        break;
-      case 'pin2':
-        getClassCheck();
-        mapCardItem[1].classList.remove('hidden');
-        mapCardItem[1].querySelector('.popup__close').onclick = function () {
-          mapCardItem[1].classList.add('hidden');
-        };
-        break;
-      case 'pin3':
-        getClassCheck();
-        mapCardItem[2].classList.remove('hidden');
-        mapCardItem[2].querySelector('.popup__close').onclick = function () {
-          mapCardItem[2].classList.add('hidden');
-        };
-        break;
-      case 'pin4':
-        getClassCheck();
-        mapCardItem[3].classList.remove('hidden');
-        mapCardItem[3].querySelector('.popup__close').onclick = function () {
-          mapCardItem[3].classList.add('hidden');
-        };
-        break;
-      case 'pin5':
-        getClassCheck();
-        mapCardItem[4].classList.remove('hidden');
-        mapCardItem[4].querySelector('.popup__close').onclick = function () {
-          mapCardItem[4].classList.add('hidden');
-        };
-        break;
-      case 'pin6':
-        getClassCheck();
-        mapCardItem[5].classList.remove('hidden');
-        mapCardItem[5].querySelector('.popup__close').onclick = function () {
-          mapCardItem[5].classList.add('hidden');
-        };
-        break;
-      case 'pin7':
-        getClassCheck();
-        mapCardItem[6].classList.remove('hidden');
-        mapCardItem[6].querySelector('.popup__close').onclick = function () {
-          mapCardItem[6].classList.add('hidden');
-        };
-        break;
-      case 'pin8':
-        getClassCheck();
-        mapCardItem[7].classList.remove('hidden');
-        mapCardItem[7].querySelector('.popup__close').onclick = function () {
-          mapCardItem[7].classList.add('hidden');
-        };
-        break;
-    }
-  };
-  for (var k = 1; k < pinItem.length; k++) {
-    pinItem[k].classList.add('pin' + k);
-    pinItem[k].onclick = onPinItemClick;
-  }
-  mapPinMain.removeEventListener('mouseup', onPinUp);
-};
-
-mapPinMain.addEventListener('mouseup', onPinUp);
-
-// Необходимо сделать функцию, которая будет проверять если у обьявления клас 'hidden', и если нет добавлять. Таким
-// образом при свитч кейсе сперва должна быть функция которая делает у всех обьявлений хиден, а потом уже уберать
-// хиден у соответствующего обьявления!
-
-
+})();
